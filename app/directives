@@ -1,0 +1,72 @@
+angular.module("directives",[])
+.directive('captcha',[
+  'apiService','$sessionStorage','$rootScope'
+  (apiService,$sessionStorage,$rootScope)->
+    restrict:'E'
+    replace:true
+    template:'<img src="" title="看不清楚？换一张" style="cursor:pointer"/>'
+    link:(scope, element, attrs)->
+      $rootScope.$on 'captcha',->onClick()
+      strRand=Math.random()+''
+      captchaID=strRand.substr(2,strRand.length-2)
+      $sessionStorage.captchaID=captchaID
+      element.attr 'src',apiService.url+'captcha?t='+captchaID
+      element.click -> onClick()
+      onClick=->
+        captchaID=new Date().getTime()
+        element.attr 'src',apiService.url+'captcha?t='+captchaID
+        $sessionStorage.captchaID=captchaID
+      
+      scope.$on '$destroy', -> delete $sessionStorage.captchaID
+])
+.directive('timePiker',[
+  ->
+    restrict:'A'
+    require: 'ngModel'
+    scope:
+      'ngModel':'='
+    link:(scope, element, attrs)->
+      element.timepicker
+        showMeridian:false
+        minuteStep:30
+        showInputs:false
+        defaultTime:scope.ngModel
+])
+.directive('imgDefault',[
+  ->
+    restrict:'A'
+    scope:
+      'defaultWidth':'='
+      'defaultHeight':'='
+    link:(scope, element, attrs)->
+#      Browser = new Object()
+#      Browser.userAgent = window.navigator.userAgent.toLowerCase()
+#      Browser.ie = /msie/.test(Browser.userAgent)
+#      Browser.Moz = /gecko/.test(Browser.userAgent)
+      element.addClass 'img-loading'
+      element.bind 'error',->
+        if scope.defaultWidth
+          element.attr('width',scope.defaultWidth)
+          element.attr('height',scope.defaultHeight)
+        else
+          element.attr('width',200)
+          element.attr('height',200)
+        parent=element.parent()
+        if parent.is('div')
+          parent.css('text-align','center')
+        else
+          pparent=parent.parent()
+          if pparent.is('div') then pparent.css('text-align','center')
+        element.attr('src','/img/fail-11.png')
+      element.bind 'load',->
+        element.removeClass 'img-loading'
+])
+.directive('embedSrc',[
+ ->
+  restrict: 'A'
+  link:(scope, element, attrs)->
+    current = element
+    clone = element.clone().attr('src', attrs.embedSrc)
+    current.replaceWith(clone);
+    current = clone
+])
